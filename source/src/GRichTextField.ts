@@ -1,4 +1,4 @@
-import { BitmapFont, HorizontalTextAlignment, RichText, SpriteAtlas, SpriteFrame } from "cc";
+import { BitmapFont, HorizontalTextAlignment, RichText, SpriteAtlas, SpriteFrame, VerticalTextAlignment } from "cc";
 import { PackageItemType, AutoSizeType } from "./FieldTypes";
 import { GTextField } from "./GTextField";
 import { PackageItem } from "./PackageItem";
@@ -56,6 +56,14 @@ export class GRichTextField extends GTextField {
 
     public set align(value: HorizontalTextAlignment) {
         this._richText.horizontalAlign = value;
+    }
+
+    public get verticalAlign(): VerticalTextAlignment {
+        return this._richText.verticalAlign;
+    }
+
+    public set verticalAlign(value: VerticalTextAlignment) {
+        this._richText.verticalAlign = value;
     }
 
     public get underline(): boolean {
