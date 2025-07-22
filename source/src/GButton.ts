@@ -522,14 +522,8 @@ export class GButton extends GComponent {
     }
 
     private onClick_1(): void {
-        if (this._sound) {
-            var pi: PackageItem = UIPackage.getItemByURL(this._sound);
-            if (pi) {
-                var sound: AudioClip = <AudioClip>pi.owner.getItemAsset(pi);
-                if (sound)
-                    GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
-            }
-        }
+        // llx - modified
+        this.tryPlaySound();
 
         if (this._mode == ButtonMode.Check) {
             if (this._changeStateOnClick) {
@@ -546,6 +540,15 @@ export class GButton extends GComponent {
         else {
             if (this._relatedController)
                 this._relatedController.selectedPageId = this._relatedPageId;
+        }
+    }
+
+    // llx - modified
+    protected tryPlaySound() {
+        if (this._sound) {
+            if (UIConfig.buttonSoundPlayHandler) {
+                UIConfig.buttonSoundPlayHandler(this._sound);
+            }
         }
     }
 }

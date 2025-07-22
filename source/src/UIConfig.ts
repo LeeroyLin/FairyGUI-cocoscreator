@@ -19,6 +19,8 @@ export class UIConfig {
     //Default button click sound
     public static buttonSound: string;
     public static buttonSoundVolumeScale: number = 1;
+    // llx - modified
+    public static buttonSoundPlayHandler: (name:string)=>void;
 
     public static horizontalScrollBar: string;
     public static verticalScrollBar: string;
