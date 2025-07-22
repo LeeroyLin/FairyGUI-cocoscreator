@@ -1,4 +1,4 @@
-import { BitmapFont, HorizontalTextAlignment, RichText, SpriteAtlas, SpriteFrame, VerticalTextAlignment } from "cc";
+import { BitmapFont, Color, HorizontalTextAlignment, RichText, SpriteAtlas, SpriteFrame, VerticalTextAlignment } from "cc";
 import { PackageItemType, AutoSizeType } from "./FieldTypes";
 import { GTextField } from "./GTextField";
 import { PackageItem } from "./PackageItem";
@@ -31,6 +31,11 @@ export class GRichTextField extends GTextField {
     private _bold: boolean;
     private _italics: boolean;
     private _underline: boolean;
+
+    // llx - modified
+    private _rfStroke: number;
+    // llx - modified
+    private _rfStrokeColor: Color;
 
     public linkUnderline: boolean;
     public linkColor: string;
@@ -102,6 +107,32 @@ export class GRichTextField extends GTextField {
         }
     }
 
+    // llx - modified
+    public get stroke(): number {
+        return this._rfStroke;
+    }
+
+    // llx - modified
+    public set stroke(value: number) {
+        this._rfStroke = value;
+
+        this.updateText();
+    }
+
+    // llx - modified
+    public get strokeColor(): Color {
+        return this._rfStrokeColor;
+    }
+
+    // llx - modified
+    public set strokeColor(value: Color) {
+        if (!this._rfStrokeColor)
+            this._rfStrokeColor = new Color();
+        this._rfStrokeColor.set(value);
+
+        this.updateText();
+    }
+
     protected markSizeChanged(): void {
         //RichText貌似没有延迟重建文本，所以这里不需要
     }
@@ -129,6 +160,11 @@ export class GRichTextField extends GTextField {
         if (this._grayed)
             c = toGrayedColor(c);
         text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
+
+        // llx - modified
+        if (this.stroke) {
+            text2 = `<outline color=#${this.strokeColor.toHEX("#rrggbb")} width=${this.stroke}>${text2}</outline>`;
+        }
 
         if (this._autoSize == AutoSizeType.Both) {
             if (this._richText.maxWidth != 0)
