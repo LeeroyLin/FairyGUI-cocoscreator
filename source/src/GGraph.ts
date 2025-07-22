@@ -17,6 +17,23 @@ export class GGraph extends GObject {
     private _distances?: Array<number>;
     private _hasContent: boolean;
 
+    // llx - modified
+    // 0-255
+    private _lineAlpha: number = 1;
+    private _fillAlpha: number = 1;
+
+    // llx - modified
+    set alpha(value:number) {
+        if (this._alpha != value) {
+            this._alpha = value;
+            
+            this.updateAlpha();
+
+            if (this._type != 0)
+                this.updateGraph();
+        }
+    }
+
     public constructor() {
         super();
 
@@ -93,8 +110,12 @@ export class GGraph extends GObject {
 
     public set color(value: Color) {
         this._fillColor.set(value);
-        if (this._type != 0)
+        if (this._type != 0) {
+            // llx - modified
+            this.updateAlpha();
+
             this.updateGraph();
+        }
     }
 
     private updateGraph(): void {
@@ -234,6 +255,12 @@ export class GGraph extends GObject {
             return null;
     }
 
+    // llx - modified
+    private updateAlpha() {
+        this._lineColor.a = this._lineAlpha * this._alpha;
+        this._fillColor.a = this._fillAlpha * this._alpha;
+    }
+
     public setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void {
         super.setup_beforeAdd(buffer, beginPos);
 
@@ -247,6 +274,14 @@ export class GGraph extends GObject {
             this._lineSize = buffer.readInt();
             this._lineColor.set(buffer.readColor(true));
             this._fillColor.set(buffer.readColor(true));
+
+            // llx - modified
+            this._lineAlpha = this._lineColor.a;
+            this._fillAlpha = this._fillColor.a;
+
+            // llx - modified
+            this.updateAlpha();
+
             if (buffer.readBool()) {
                 this._cornerRadius = new Array<number>(4);
                 for (i = 0; i < 4; i++)
@@ -273,5 +308,10 @@ export class GGraph extends GObject {
 
             this.updateGraph();
         }
+    }
+
+    // llx - modified
+    protected onEnable(): void {
+        this.updateGraph();
     }
 }
