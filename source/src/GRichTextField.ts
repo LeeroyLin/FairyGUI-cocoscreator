@@ -160,7 +160,7 @@ export class GRichTextField extends GTextField {
 
         // 空字符串快速处理
         if (!this._text || this._text == "") {
-            this._richText.string = text2;
+            this._richText.string = "";
             return;
         }
 

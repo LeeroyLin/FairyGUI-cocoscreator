@@ -358,6 +358,12 @@ export class GTextField extends GObject {
     }
 
     protected updateText(): void {
+        // 空字符串快速处理
+        if (!this._text || this.text === "") {
+            this._label.string = "";
+            return;
+        }
+
         var text2: string = this._text;
         if (this._templateVars)
             text2 = this.parseTemplate(text2);
