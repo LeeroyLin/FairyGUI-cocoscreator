@@ -36,6 +36,10 @@ export class GRichTextField extends GTextField {
     private _rfStroke: number;
     // llx - modified
     private _rfStrokeColor: Color;
+    // llx - modified
+    protected _tempStrokeColor: Color;
+    // llx - modified
+    protected _tempColor: Color;
 
     public linkUnderline: boolean;
     public linkColor: string;
@@ -46,6 +50,11 @@ export class GRichTextField extends GTextField {
         this._node.name = "GRichTextField";
         this._touchDisabled = false;
         this.linkUnderline = UIConfig.linkUnderline;
+        
+        // llx - modified
+        this._tempColor = new Color(255, 255, 255, 255);
+        // llx - modified
+        this._tempStrokeColor = new Color(255, 255, 255, 255);
     }
 
     protected createRenderer() {
@@ -137,6 +146,17 @@ export class GRichTextField extends GTextField {
         //RichText貌似没有延迟重建文本，所以这里不需要
     }
 
+    // llx - modified
+    private parseUUBColor(text:string):string {
+        return text.replace(/\[color=([^\]]+)\]/g, (match, p1) => {
+            this._tempColor.fromHEX(p1);
+
+            this._tempColor = toGrayedColor(this._tempColor);
+
+            return `[color=#${this._tempColor.toHEX("#rrggbb")}]`;
+        });
+    }
+
     protected updateText(): void {
         var text2: string = this._text;
 
@@ -147,7 +167,8 @@ export class GRichTextField extends GTextField {
             defaultParser.linkUnderline = this.linkUnderline;
             defaultParser.linkColor = this.linkColor;
 
-            text2 = defaultParser.parse(text2);
+            // llx - modified
+            text2 = defaultParser.parse(this.parseUUBColor(text2));
         }
 
         if (this._bold)
@@ -163,7 +184,14 @@ export class GRichTextField extends GTextField {
 
         // llx - modified
         if (this.stroke) {
-            text2 = `<outline color=#${this.strokeColor.toHEX("#rrggbb")} width=${this.stroke}>${text2}</outline>`;
+            let strokeC = this._tempStrokeColor;
+            strokeC.set(this.strokeColor);
+
+            // llx - modified
+            if (this._grayed)
+                strokeC = toGrayedColor(this.strokeColor);
+
+            text2 = `<outline color=#${strokeC.toHEX("#rrggbb")} width=${this.stroke}>${text2}</outline>`;
         }
 
         if (this._autoSize == AutoSizeType.Both) {
@@ -210,5 +238,11 @@ export class GRichTextField extends GTextField {
 
         if (this._autoSize != AutoSizeType.Both)
             this._richText.maxWidth = this._width;
+    }
+
+    // llx - modified
+    protected handleGrayedChanged(): void {
+        this.updateFontColor();
+        this.updateText();
     }
 }
