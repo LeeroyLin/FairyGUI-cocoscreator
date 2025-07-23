@@ -388,7 +388,7 @@ export class GTextField extends GObject {
             value = Color.WHITE;
 
         if (this._grayed)
-            value = toGrayedColor(value);
+            toGrayedColor(value, value);
         label.color = value;
     }
 
@@ -406,7 +406,7 @@ export class GTextField extends GObject {
         if (!this._strokeColor)
             this._strokeColor = new Color();
         if (this._grayed)
-            this._label.outlineColor = toGrayedColor(this._strokeColor);
+            toGrayedColor(this._strokeColor, this._label.outlineColor);
         else
             this._label.outlineColor = this._strokeColor;
     }
@@ -417,7 +417,7 @@ export class GTextField extends GObject {
         if (!this._shadowColor)
             this._shadowColor = new Color();
         if (this._grayed)
-            this._label.shadowColor = toGrayedColor(this._shadowColor);
+            toGrayedColor(this._shadowColor, this._label.shadowColor);
         else
             this._label.shadowColor = this._shadowColor;
     }

@@ -51,9 +51,7 @@ export class GRichTextField extends GTextField {
         this._touchDisabled = false;
         this.linkUnderline = UIConfig.linkUnderline;
         
-        // llx - modified
         this._tempColor = new Color(255, 255, 255, 255);
-        // llx - modified
         this._tempStrokeColor = new Color(255, 255, 255, 255);
     }
 
@@ -116,24 +114,24 @@ export class GRichTextField extends GTextField {
         }
     }
 
-    // llx - modified
+    // 描边宽度
     public get stroke(): number {
         return this._rfStroke;
     }
 
-    // llx - modified
+    // 描边宽度
     public set stroke(value: number) {
         this._rfStroke = value;
 
         this.updateText();
     }
 
-    // llx - modified
+    // 描边颜色
     public get strokeColor(): Color {
         return this._rfStrokeColor;
     }
 
-    // llx - modified
+    // 描边颜色
     public set strokeColor(value: Color) {
         if (!this._rfStrokeColor)
             this._rfStrokeColor = new Color();
@@ -146,12 +144,12 @@ export class GRichTextField extends GTextField {
         //RichText貌似没有延迟重建文本，所以这里不需要
     }
 
-    // llx - modified
-    private parseUUBColor(text:string):string {
+    // 处理UUB颜色的置灰情况
+    private parseUBBColor(text:string):string {
         return text.replace(/\[color=([^\]]+)\]/g, (match, p1) => {
             this._tempColor.fromHEX(p1);
 
-            this._tempColor = toGrayedColor(this._tempColor);
+            toGrayedColor(this._tempColor, this._tempColor);
 
             return `[color=#${this._tempColor.toHEX("#rrggbb")}]`;
         });
@@ -160,6 +158,12 @@ export class GRichTextField extends GTextField {
     protected updateText(): void {
         var text2: string = this._text;
 
+        // 空字符串快速处理
+        if (!this._text || this._text == "") {
+            this._richText.string = text2;
+            return;
+        }
+
         if (this._templateVars)
             text2 = this.parseTemplate(text2);
 
@@ -167,8 +171,8 @@ export class GRichTextField extends GTextField {
             defaultParser.linkUnderline = this.linkUnderline;
             defaultParser.linkColor = this.linkColor;
 
-            // llx - modified
-            text2 = defaultParser.parse(this.parseUUBColor(text2));
+            // 先处理UUB颜色的置灰情况，再格式化ubb
+            text2 = defaultParser.parse(this.parseUBBColor(text2));
         }
 
         if (this._bold)
@@ -179,17 +183,17 @@ export class GRichTextField extends GTextField {
             text2 = "<u>" + text2 + "</u>";
         let c = this._color
         if (this._grayed)
-            c = toGrayedColor(c);
+            toGrayedColor(c, c);
         text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
 
-        // llx - modified
+        // 有描边
         if (this.stroke) {
-            let strokeC = this._tempStrokeColor;
+            let strokeC = this._tempColor;
             strokeC.set(this.strokeColor);
 
-            // llx - modified
+            // 置灰
             if (this._grayed)
-                strokeC = toGrayedColor(this.strokeColor);
+                toGrayedColor(strokeC, strokeC);
 
             text2 = `<outline color=#${strokeC.toHEX("#rrggbb")} width=${this.stroke}>${text2}</outline>`;
         }
@@ -240,7 +244,7 @@ export class GRichTextField extends GTextField {
             this._richText.maxWidth = this._width;
     }
 
-    // llx - modified
+    // 置灰回调
     protected handleGrayedChanged(): void {
         this.updateFontColor();
         this.updateText();
