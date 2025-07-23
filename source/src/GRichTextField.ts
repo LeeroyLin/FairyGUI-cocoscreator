@@ -32,17 +32,17 @@ export class GRichTextField extends GTextField {
     private _italics: boolean;
     private _underline: boolean;
 
-    // llx - modified
-    private _rfStroke: number;
-    // llx - modified
-    private _rfStrokeColor: Color;
-    // llx - modified
-    protected _tempStrokeColor: Color;
-    // llx - modified
-    protected _tempColor: Color;
-
     public linkUnderline: boolean;
     public linkColor: string;
+
+    // 描边宽度
+    private _rfStroke: number;
+    // 描边颜色
+    private _rfStrokeColor: Color;
+
+    // 临时字段
+    protected _tempStrokeColor: Color;
+    protected _tempColor: Color;
 
     public constructor() {
         super();
@@ -146,13 +146,17 @@ export class GRichTextField extends GTextField {
 
     // 处理UUB颜色的置灰情况
     private parseUBBColor(text:string):string {
-        return text.replace(/\[color=([^\]]+)\]/g, (match, p1) => {
-            this._tempColor.fromHEX(p1);
+        if (this._grayed) {
+            return text.replace(/\[color=([^\]]+)\]/g, (match, p1) => {
+                this._tempColor.fromHEX(p1);
+    
+                toGrayedColor(this._tempColor, this._tempColor);
+    
+                return `[color=#${this._tempColor.toHEX("#rrggbb")}]`;
+            });
+        }
 
-            toGrayedColor(this._tempColor, this._tempColor);
-
-            return `[color=#${this._tempColor.toHEX("#rrggbb")}]`;
-        });
+        return text;
     }
 
     protected updateText(): void {
@@ -181,10 +185,14 @@ export class GRichTextField extends GTextField {
             text2 = "<i>" + text2 + "</i>";
         if (this._underline)
             text2 = "<u>" + text2 + "</u>";
-        let c = this._color
+
+        let c = this._tempColor;
+        c.set(this._color);
+
         if (this._grayed)
             toGrayedColor(c, c);
-        text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
+
+        text2 = "<color=#" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
 
         // 有描边
         if (this.stroke) {
@@ -214,7 +222,7 @@ export class GRichTextField extends GTextField {
     }
 
     protected updateFontColor() {
-        this.assignFontColor(this._richText, this._color);
+        this.updateText();
     }
 
     protected updateFontSize() {
@@ -247,6 +255,5 @@ export class GRichTextField extends GTextField {
     // 置灰回调
     protected handleGrayedChanged(): void {
         this.updateFontColor();
-        this.updateText();
     }
 }
