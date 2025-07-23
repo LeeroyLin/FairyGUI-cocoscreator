@@ -4,9 +4,13 @@ import { FlipType, FillMethod, FillOrigin, ObjectPropID } from "./FieldTypes";
 import { GObject } from "./GObject";
 import { PackageItem } from "./PackageItem";
 import { ByteBuffer } from "./utils/ByteBuffer";
+import { log } from "console";
 
 export class GImage extends GObject {
     public _content: Image;
+
+    // 额外记录颜色，避免动效里改变颜色无效果
+    private _color:Color;
 
     public constructor() {
         super();
@@ -16,14 +20,18 @@ export class GImage extends GObject {
         this._content = this._node.addComponent(Image);
         this._content.sizeMode = Sprite.SizeMode.CUSTOM;
         this._content.trim = false;
+        
+        this._color = new Color(255, 255, 255, 255);
+        this._content.color = this._color;
     }
 
     public get color(): Color {
-        return this._content.color;
+        return this._color;
     }
 
     public set color(value: Color) {
-        this._content.color = value;
+        this._color = value;
+        this._content.color = this._color;
         this.updateGear(4);
     }
 
