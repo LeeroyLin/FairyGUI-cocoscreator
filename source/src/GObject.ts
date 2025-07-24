@@ -744,6 +744,7 @@ export class GObject {
         ay = ay || 0;
         s_vec3.x = ax;
         s_vec3.y = -ay;
+        s_vec3.z = s_vec3.z || 0;
         if (!this._pivotAsAnchor) {
             s_vec3.x -= this._uiTrans.anchorX * this._width;
             s_vec3.y += (1 - this._uiTrans.anchorY) * this._height;
@@ -762,6 +763,7 @@ export class GObject {
         ay = ay || 0;
         s_vec3.x = ax;
         s_vec3.y = Decls.GRoot.inst.height - ay;
+        s_vec3.z = s_vec3.z || 0;
         this._uiTrans.convertToNodeSpaceAR(s_vec3, s_vec3);
         if (!this._pivotAsAnchor) {
             s_vec3.x += this._uiTrans.anchorX * this._width;
