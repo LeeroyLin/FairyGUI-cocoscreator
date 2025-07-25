@@ -92,7 +92,10 @@ export class GSlider extends GComponent {
     }
 
     public update(): void {
-        this.updateWithPercent((this._value - this._min) / (this._max - this._min));
+        let percent = 1;
+        if (this._max !== this._min)
+            percent = (this._value - this._min) / (this._max - this._min);
+        this.updateWithPercent(percent);
     }
 
     private updateWithPercent(percent: number, manual?: boolean): void {
