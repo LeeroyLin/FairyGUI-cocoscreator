@@ -634,6 +634,36 @@ export class ScrollPane extends Component {
             this.refresh();
     }
 
+    // llx - modified
+    public scrollToView2Center(target: any, ani?: boolean) {
+        this._owner.ensureBoundsCorrect();
+        if (this._needRefresh)
+            this.refresh();
+        
+        var rect;
+        if (target instanceof GObject) {
+            if (target.parent != this._owner) {
+                target.parent.localToGlobalRect(target.x, target.y, target.width, target.height, s_rect);
+                rect = this._owner.globalToLocalRect(s_rect.x, s_rect.y, s_rect.width, s_rect.height, s_rect);
+            }
+            else {
+                rect = s_rect;
+                rect.x = target.x;
+                rect.y = target.y;
+                rect.width = target.width;
+                rect.height = target.height;
+            }
+        }
+        else
+            rect = target;
+
+        this.setPosX(rect.x + rect.width * 2 - this._viewSize.x, ani);
+        this.setPosY(rect.y + rect.height * 2 - this._viewSize.y, ani);
+
+        if (!ani && this._needRefresh)
+            this.refresh();
+    }
+
     public isChildInView(obj: GObject): boolean {
         if (this._overlapSize.y > 0) {
             var dist: number = obj.y + (-this._container.position.y);

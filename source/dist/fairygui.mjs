@@ -3786,10 +3786,23 @@ class GGroup extends GObject {
 }
 
 class GGraph extends GObject {
+    // llx - modified
+    set alpha(value) {
+        if (this._alpha != value) {
+            this._alpha = value;
+            this.updateAlpha();
+            if (this._type != 0)
+                this.updateGraph();
+        }
+    }
     constructor() {
         super();
         this._type = 0;
         this._lineSize = 0;
+        // llx - modified
+        // 0-255
+        this._lineAlpha = 1;
+        this._fillAlpha = 1;
         this._node.name = "GGraph";
         this._lineSize = 1;
         this._lineColor = new Color();
@@ -3852,8 +3865,11 @@ class GGraph extends GObject {
     }
     set color(value) {
         this._fillColor.set(value);
-        if (this._type != 0)
+        if (this._type != 0) {
+            // llx - modified
+            this.updateAlpha();
             this.updateGraph();
+        }
     }
     updateGraph() {
         let ctx = this._content;
@@ -3971,6 +3987,11 @@ class GGraph extends GObject {
         else
             return null;
     }
+    // llx - modified
+    updateAlpha() {
+        this._lineColor.a = this._lineAlpha * this._alpha;
+        this._fillColor.a = this._fillAlpha * this._alpha;
+    }
     setup_beforeAdd(buffer, beginPos) {
         super.setup_beforeAdd(buffer, beginPos);
         buffer.seek(beginPos, 5);
@@ -3981,6 +4002,11 @@ class GGraph extends GObject {
             this._lineSize = buffer.readInt();
             this._lineColor.set(buffer.readColor(true));
             this._fillColor.set(buffer.readColor(true));
+            // llx - modified
+            this._lineAlpha = this._lineColor.a;
+            this._fillAlpha = this._fillColor.a;
+            // llx - modified
+            this.updateAlpha();
             if (buffer.readBool()) {
                 this._cornerRadius = new Array(4);
                 for (i = 0; i < 4; i++)
@@ -4005,6 +4031,10 @@ class GGraph extends GObject {
             }
             this.updateGraph();
         }
+    }
+    // llx - modified
+    onEnable() {
+        this.updateGraph();
     }
 }
 
@@ -4124,12 +4154,15 @@ class GImage extends GObject {
         this._content = this._node.addComponent(Image$1);
         this._content.sizeMode = Sprite.SizeMode.CUSTOM;
         this._content.trim = false;
+        this._color = new Color(255, 255, 255, 255);
+        this._content.color = this._color;
     }
     get color() {
-        return this._content.color;
+        return this._color;
     }
     set color(value) {
-        this._content.color = value;
+        this._color = value;
+        this._content.color = this._color;
         this.updateGear(4);
     }
     get flip() {
@@ -5712,9 +5745,10 @@ var _branch = "";
 var _vars = {};
 var Decls = {};
 
-function toGrayedColor(c) {
+function toGrayedColor(c, out) {
     let v = c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-    return new Color(v, v, v, c.a);
+    out.set(v, v, v, c.a);
+    return out;
 }
 
 class UBBParser {
@@ -6135,6 +6169,11 @@ class GTextField extends GObject {
         }
     }
     updateText() {
+        // 空字符串快速处理
+        if (!this._text || this.text === "") {
+            this._label.string = "";
+            return;
+        }
         var text2 = this._text;
         if (this._templateVars)
             text2 = this.parseTemplate(text2);
@@ -6160,7 +6199,7 @@ class GTextField extends GObject {
         if ((font instanceof BitmapFont) && !(font.fntConfig.canTint))
             value = Color.WHITE;
         if (this._grayed)
-            value = toGrayedColor(value);
+            toGrayedColor(value, value);
         label.color = value;
     }
     updateFont() {
@@ -6175,7 +6214,7 @@ class GTextField extends GObject {
         if (!this._strokeColor)
             this._strokeColor = new Color();
         if (this._grayed)
-            this._label.outlineColor = toGrayedColor(this._strokeColor);
+            toGrayedColor(this._strokeColor, this._label.outlineColor);
         else
             this._label.outlineColor = this._strokeColor;
     }
@@ -6185,7 +6224,7 @@ class GTextField extends GObject {
         if (!this._shadowColor)
             this._shadowColor = new Color();
         if (this._grayed)
-            this._label.shadowColor = toGrayedColor(this._shadowColor);
+            toGrayedColor(this._shadowColor, this._label.shadowColor);
         else
             this._label.shadowColor = this._shadowColor;
     }
@@ -6343,6 +6382,8 @@ class GRichTextField extends GTextField {
         this._node.name = "GRichTextField";
         this._touchDisabled = false;
         this.linkUnderline = UIConfig.linkUnderline;
+        this._tempColor = new Color(255, 255, 255, 255);
+        this._tempStrokeColor = new Color(255, 255, 255, 255);
     }
     createRenderer() {
         this._richText = this._node.addComponent(RichText);
@@ -6355,6 +6396,12 @@ class GRichTextField extends GTextField {
     }
     set align(value) {
         this._richText.horizontalAlign = value;
+    }
+    get verticalAlign() {
+        return this._richText.verticalAlign;
+    }
+    set verticalAlign(value) {
+        this._richText.verticalAlign = value;
     }
     get underline() {
         return this._underline;
@@ -6383,17 +6430,54 @@ class GRichTextField extends GTextField {
             this.updateText();
         }
     }
+    // 描边宽度
+    get stroke() {
+        return this._rfStroke;
+    }
+    // 描边宽度
+    set stroke(value) {
+        this._rfStroke = value;
+        this.updateText();
+    }
+    // 描边颜色
+    get strokeColor() {
+        return this._rfStrokeColor;
+    }
+    // 描边颜色
+    set strokeColor(value) {
+        if (!this._rfStrokeColor)
+            this._rfStrokeColor = new Color();
+        this._rfStrokeColor.set(value);
+        this.updateText();
+    }
     markSizeChanged() {
         //RichText貌似没有延迟重建文本，所以这里不需要
     }
+    // 处理UUB颜色的置灰情况
+    parseUBBColor(text) {
+        if (this._grayed) {
+            return text.replace(/\[color=([^\]]+)\]/g, (match, p1) => {
+                this._tempColor.fromHEX(p1);
+                toGrayedColor(this._tempColor, this._tempColor);
+                return `[color=#${this._tempColor.toHEX("#rrggbb")}]`;
+            });
+        }
+        return text;
+    }
     updateText() {
         var text2 = this._text;
+        // 空字符串快速处理
+        if (!this._text || this._text == "") {
+            this._richText.string = "";
+            return;
+        }
         if (this._templateVars)
             text2 = this.parseTemplate(text2);
         if (this._ubbEnabled) {
             defaultParser.linkUnderline = this.linkUnderline;
             defaultParser.linkColor = this.linkColor;
-            text2 = defaultParser.parse(text2);
+            // 先处理UUB颜色的置灰情况，再格式化ubb
+            text2 = defaultParser.parse(this.parseUBBColor(text2));
         }
         if (this._bold)
             text2 = "<b>" + text2 + "</b>";
@@ -6401,10 +6485,20 @@ class GRichTextField extends GTextField {
             text2 = "<i>" + text2 + "</i>";
         if (this._underline)
             text2 = "<u>" + text2 + "</u>";
-        let c = this._color;
+        let c = this._tempColor;
+        c.set(this._color);
         if (this._grayed)
-            c = toGrayedColor(c);
-        text2 = "<color=" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
+            toGrayedColor(c, c);
+        text2 = "<color=#" + c.toHEX("#rrggbb") + ">" + text2 + "</color>";
+        // 有描边
+        if (this.stroke) {
+            let strokeC = this._tempColor;
+            strokeC.set(this.strokeColor);
+            // 置灰
+            if (this._grayed)
+                toGrayedColor(strokeC, strokeC);
+            text2 = `<outline color=#${strokeC.toHEX("#rrggbb")} width=${this.stroke}>${text2}</outline>`;
+        }
         if (this._autoSize == AutoSizeType.Both) {
             if (this._richText.maxWidth != 0)
                 this._richText["_maxWidth"] = 0;
@@ -6419,7 +6513,7 @@ class GRichTextField extends GTextField {
         this.assignFont(this._richText, this._realFont);
     }
     updateFontColor() {
-        this.assignFontColor(this._richText, this._color);
+        this.updateText();
     }
     updateFontSize() {
         let fontSize = this._fontSize;
@@ -6442,6 +6536,10 @@ class GRichTextField extends GTextField {
             return;
         if (this._autoSize != AutoSizeType.Both)
             this._richText.maxWidth = this._width;
+    }
+    // 置灰回调
+    handleGrayedChanged() {
+        this.updateFontColor();
     }
 }
 
@@ -7684,6 +7782,32 @@ class ScrollPane extends Component {
                     this.setPosX(rect.x + rect.width - this._viewSize.x, ani);
             }
         }
+        if (!ani && this._needRefresh)
+            this.refresh();
+    }
+    // llx - modified
+    scrollToView2Center(target, ani) {
+        this._owner.ensureBoundsCorrect();
+        if (this._needRefresh)
+            this.refresh();
+        var rect;
+        if (target instanceof GObject) {
+            if (target.parent != this._owner) {
+                target.parent.localToGlobalRect(target.x, target.y, target.width, target.height, s_rect);
+                rect = this._owner.globalToLocalRect(s_rect.x, s_rect.y, s_rect.width, s_rect.height, s_rect);
+            }
+            else {
+                rect = s_rect;
+                rect.x = target.x;
+                rect.y = target.y;
+                rect.width = target.width;
+                rect.height = target.height;
+            }
+        }
+        else
+            rect = target;
+        this.setPosX(rect.x + rect.width * 2 - this._viewSize.x, ani);
+        this.setPosY(rect.y + rect.height * 2 - this._viewSize.y, ani);
         if (!ani && this._needRefresh)
             this.refresh();
     }
@@ -13370,14 +13494,8 @@ class GButton extends GComponent {
         }
     }
     onClick_1() {
-        if (this._sound) {
-            var pi = UIPackage.getItemByURL(this._sound);
-            if (pi) {
-                var sound = pi.owner.getItemAsset(pi);
-                if (sound)
-                    GRoot.inst.playOneShotSound(sound, this._soundVolumeScale);
-            }
-        }
+        // llx - modified
+        this.tryPlaySound();
         if (this._mode == ButtonMode.Check) {
             if (this._changeStateOnClick) {
                 this.selected = !this._selected;
@@ -13393,6 +13511,14 @@ class GButton extends GComponent {
         else {
             if (this._relatedController)
                 this._relatedController.selectedPageId = this._relatedPageId;
+        }
+    }
+    // llx - modified
+    tryPlaySound() {
+        if (this._sound) {
+            if (UIConfig.buttonSoundPlayHandler) {
+                UIConfig.buttonSoundPlayHandler(this._sound);
+            }
         }
     }
 }
@@ -15898,7 +16024,10 @@ class GSlider extends GComponent {
         }
     }
     update() {
-        this.updateWithPercent((this._value - this._min) / (this._max - this._min));
+        let percent = 1;
+        if (this._max !== this._min)
+            percent = (this._value - this._min) / (this._max - this._min);
+        this.updateWithPercent(percent);
     }
     updateWithPercent(percent, manual) {
         percent = math.clamp01(percent);
