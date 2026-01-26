@@ -531,6 +531,16 @@ export class ScrollPane extends Component {
         return math.clamp(-(-this._container.position.y), 0, this._overlapSize.y);
     }
 
+    // llx - modified
+    public get scrollingPosXNoClamp(): number {
+        return -this._container.position.x;
+    }
+
+    // llx - modified
+    public get scrollingPosYNoClamp(): number {
+        return -(-this._container.position.y);
+    }
+
     public scrollTop(ani?: boolean): void {
         this.setPercY(0, ani);
     }
