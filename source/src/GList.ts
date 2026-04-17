@@ -1068,6 +1068,10 @@ export class GList extends GComponent {
         this.setVirtualListChangedFlag(false);
     }
 
+    public refreshVirtualListNow(): void {
+        this._refreshVirtualList();
+    }
+
     private checkVirtualList(): void {
         if (this._virtualListChanged != 0) {
             this._refreshVirtualList();

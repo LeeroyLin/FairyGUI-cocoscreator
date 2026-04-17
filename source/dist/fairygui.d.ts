@@ -1100,6 +1100,7 @@ declare module 'fairygui-cc/GList' {
         get numItems(): number;
         set numItems(value: number);
         refreshVirtualList(): void;
+        refreshVirtualListNow(): void;
         protected updateBounds(): void;
         setup_beforeAdd(buffer: ByteBuffer, beginPos: number): void;
         protected readItems(buffer: ByteBuffer): void;
@@ -1396,6 +1397,8 @@ declare module 'fairygui-cc/ScrollPane' {
         set pageController(value: Controller);
         get scrollingPosX(): number;
         get scrollingPosY(): number;
+        get scrollingPosXNoClamp(): number;
+        get scrollingPosYNoClamp(): number;
         scrollTop(ani?: boolean): void;
         scrollBottom(ani?: boolean): void;
         scrollUp(ratio?: number, ani?: boolean): void;

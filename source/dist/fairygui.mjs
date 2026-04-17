@@ -7690,6 +7690,14 @@ class ScrollPane extends Component {
     get scrollingPosY() {
         return math.clamp(-(-this._container.position.y), 0, this._overlapSize.y);
     }
+    // llx - modified
+    get scrollingPosXNoClamp() {
+        return -this._container.position.x;
+    }
+    // llx - modified
+    get scrollingPosYNoClamp() {
+        return -(-this._container.position.y);
+    }
     scrollTop(ani) {
         this.setPercY(0, ani);
     }
@@ -14439,6 +14447,9 @@ class GList extends GComponent {
     }
     refreshVirtualList() {
         this.setVirtualListChangedFlag(false);
+    }
+    refreshVirtualListNow() {
+        this._refreshVirtualList();
     }
     checkVirtualList() {
         if (this._virtualListChanged != 0) {
