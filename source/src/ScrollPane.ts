@@ -607,7 +607,8 @@ export class ScrollPane extends Component {
 
         if (this._overlapSize.y > 0) {
             var bottom: number = this._yPos + this._viewSize.y;
-            if (setFirst || rect.y <= this._yPos || rect.height >= this._viewSize.y) {
+            // llx - modified rect.y <= this._yPos 改为 rect.y >= this._yPos
+            if (setFirst || rect.y >= this._yPos || rect.height >= this._viewSize.y) {
                 if (this._pageMode)
                     this.setPosY(Math.floor(rect.y / this._pageSize.y) * this._pageSize.y, ani);
                 else
